@@ -1,7 +1,7 @@
 from sklearn.datasets import load_wine
-from sklearn import svm
-from sklearn.metrics import accuracy_score
+from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import RandomizedSearchCV
 
 # wine 데이터셋 읽어오기
 wine = load_wine()
@@ -10,16 +10,26 @@ wine = load_wine()
 wine_data = wine.data
 wine_target = wine.target
 
-# train데이터, test 데이터 split
+# train데이터, test 데이터 분할
 x_train, x_test, y_train, y_test = train_test_split(wine_data, wine_target, 
-                                                    random_state = 0, train_size = 0.4)
-# 모델 적용
-svm_model = svm.SVC(C=1.5, gamma=1, kernel='linear')
-svm_model.fit(x_train,y_train)
+                                                    random_state = 0, train_size = 0.2)
 
-# 예측
-pred = svm_model.predict(x_test)
+#탐색 범위 정의
+random_search = {
+               'C': [0.1, 0.5, 1.0, 1.5, 2.0, 10, 100],
+               'gamma': [0.1, 0.5, 1.0, 1.5, 2.0, 10, 100],
+               'kernel': ['linear', 'sigmoid', 'rbf'] 
+               }
 
-# svm정확도 확인
-svm_accuracy = accuracy_score(y_test, pred)
-print("svm의 정확도: " ,svm_accuracy) 
+
+#RandomizedSearchCV를 이용한 객체 생성
+random_search = RandomizedSearchCV(SVC(), random_search, cv=5)
+
+#random_search 모델 학습
+random_search.fit(x_train,y_train)
+
+#결과 출력
+print("test set score: {}".format(random_search.score(x_test, y_test)))
+
+print("가장 최적의 파라미터 : {}".format(random_search.best_params_))
+print("가장 최적의 스코어 값: {}".format(random_search.best_score_))
